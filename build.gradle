@@ -1,0 +1,53 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.4.2.RELEASE")
+    }
+}
+
+apply plugin:'base'
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+
+ext {
+    profile = project['env']
+}
+
+def loadGroovyConfig(){
+    def configFile = file('config.groovy')
+    new ConfigSlurper(profile).parse(configFile.toURL()).toProperties()
+}
+
+jar {
+    baseName = 'test-springboot-gradle'
+    version =  '1.0.0-SNAPSHOT'
+}
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+sourceSets {
+    main {
+        resources {
+            srcDirs = ["src/main/resources"]
+        }
+    }
+}
+
+processResources {
+    from(sourceSets.main.resources.srcDirs) {
+        filter(org.apache.tools.ant.filters.ReplaceTokens, tokens: loadGroovyConfig())
+    }
+}
+
+
+dependencies {
+    compile("org.springframework.boot:spring-boot-starter-web")
+    testCompile('org.springframework.boot:spring-boot-starter-test')
+}
