@@ -15,11 +15,6 @@ ext {
     profile = project['env']
 }
 
-def loadGroovyConfig(){
-    def configFile = file('config.groovy')
-    new ConfigSlurper(profile).parse(configFile.toURL()).toProperties()
-}
-
 jar {
     baseName = 'test-springboot-gradle'
     version =  '1.0.0-SNAPSHOT'
@@ -40,9 +35,16 @@ sourceSets {
     }
 }
 
+import org.apache.tools.ant.filters.ReplaceTokens
+
 processResources {
+    println "==> Load configuration for $env"
+    def config =  new ConfigSlurper(env).parse(file("config.groovy").toURI().toURL()).toProperties()
+
     from(sourceSets.main.resources.srcDirs) {
-        filter(org.apache.tools.ant.filters.ReplaceTokens, tokens: loadGroovyConfig())
+        filesMatching('**/*.yml') {
+            filter(ReplaceTokens, tokens: config, beginToken : '${', endToken : '}')
+        }
     }
 }
 
